@@ -13,6 +13,12 @@ module.exports = {
                     'src/common.js',
                 ],
             },
+            joinTo: {
+                'x/chain.js': [
+                    'node_modules/d3/**/d3.js',
+                    'src/chain.js',
+                ],
+            },
         },
         stylesheets: {joinTo: 'x/common.css'},
         templates: {joinTo: 'x/templates.js'}
