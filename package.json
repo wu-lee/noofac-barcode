@@ -1,0 +1,17 @@
+{
+  "name": "noofac-barcode",
+  "version": "1.0.0",
+  "description": "Noodle Factory barcode logo generator",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nick Stokoe",
+  "license": "GPL-3.0",
+  "devDependencies": {
+    "brunch": "^2.10.8"
+  },
+  "dependencies": {
+    "d3": "^4.7.0"
+  }
+}
