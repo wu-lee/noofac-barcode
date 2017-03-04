@@ -2,93 +2,103 @@ var d3 = require('d3');
 
 function generate(barcode, selector){
     var n = 10;
-    var nodes = d3.range(n).map(function(i) {
-        return {
-            index: i,
-        };
-    });
-    
-    var links = [];
+    var data= {
+        nodes: d3.range(n).map(function(i) {
+            return {
+                index: i,
+            };
+        }),
+        links: [],
+    };
     
     for (var ix = 1; ix < n; ++ix) {
-        links.push({source: ix-1, target: ix});
+        data.links.push({source: ix-1, target: ix});
     }
     
-    var simulation = d3.forceSimulation(nodes)
-        .force("charge", d3.forceManyBody().strength(-30))
-        .force("link", d3.forceLink(links).strength(1).distance(20).iterations(10))
+    var simulation = d3.forceSimulation(data.nodes)
+        .force("charge", d3.forceManyBody()
+               .strength(-30))
+        .force("link", d3.forceLink(data.links)
+               .strength(1)
+               .distance(20)
+               .iterations(10))
         .on("tick", ticked);
 
-    var canvas = document.querySelector("canvas"),
-        context = canvas.getContext("2d"),
-        bbox = canvas.getBoundingClientRect(),
+    d3.select("svg").remove(); //clean previous contents
+    
+    var root = d3.select(selector),
+        bbox = root.node().getBoundingClientRect(),
         width = bbox.width,
-        height = bbox.height;
+        height = bbox.height,
+
+        svg = root.append("svg")
+        .attr("width", width)
+        .attr("height", height),
     
-    d3.select(canvas)
-        .attr('width', width)
-        .attr('height', height)
+        chart = svg.append("g")
+        .classed("chart", true)
+        .attr("width", width)
+        .attr("height", height)
+        .attr("transform", "translate("+[width/2,height/2]+")")
     
+    var links = chart.append("g")
+        .attr("class", "links")
+        .selectAll("line")
+        .data(data.links)
+        .enter()
+        .append("line")
+        .attr("stroke", "#aaa");
+
+    var nodes = chart.append("g")
+        .attr("class", "nodes")
+        .selectAll("circle")
+        .data(data.nodes)
+        .enter()
+        .append("circle")
+        .attr("r", 3)
         .call(d3.drag()
-              .container(canvas)
-              .subject(dragsubject)
-        .on("start", dragstarted)
+              .on("start", dragstarted)
               .on("drag", dragged)
               .on("end", dragended));
     
+    
+/*    
+    d3.select(svg)
+        .call(d3.drag()
+              .subject(dragsubject)
+              .on("start", dragstarted)
+              .on("drag", dragged)
+              .on("end", dragended));
+  */  
     function ticked() {
-        context.clearRect(0, 0, width, height);
-        context.save();
-        context.translate(width / 2, height / 2);
+        links
+            .attr("x1", function(d) { return d.source.x; })
+            .attr("y1", function(d) { return d.source.y; })
+            .attr("x2", function(d) { return d.target.x; })
+            .attr("y2", function(d) { return d.target.y; });
         
-        context.beginPath();
-        links.forEach(drawLink);
-        context.strokeStyle = "#aaa";
-        context.stroke();
-        
-        //  links.forEach(drawLink);
-        context.strokeStyle = "#aaa";
-        context.stroke();
-        
-        context.beginPath();
-        nodes.forEach(drawNode);
-        context.fill();
-        context.strokeStyle = "#fff";
-        context.stroke();
-        
-        context.restore();
+        nodes
+            .attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; });        
     }
-    
-    function dragsubject() {
-        return simulation.find(d3.event.x - width / 2, d3.event.y - height / 2);
-    }
-    
-    function dragstarted() {
+
+    function dragstarted(d) {
         if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-        d3.event.subject.fx = d3.event.subject.x;
-        d3.event.subject.fy = d3.event.subject.y;
+        d.fx = d.x;
+        d.fy = d.y;
     }
     
-    function dragged() {
-        d3.event.subject.fx = d3.event.x;
-        d3.event.subject.fy = d3.event.y;
+    function dragged(d) {
+        d.fx = d3.event.x;
+        d.fy = d3.event.y;
     }
     
-    function dragended() {
+    function dragended(d) {
         if (!d3.event.active) simulation.alphaTarget(0);
-        d3.event.subject.fx = null;
-        d3.event.subject.fy = null;
+        d.fx = null;
+        d.fy = null;
     }
     
-    function drawLink(d) {
-        context.moveTo(d.source.x, d.source.y);
-        context.lineTo(d.target.x, d.target.y);
-    }
-    
-    function drawNode(d) {
-        context.moveTo(d.x + 3, d.y);
-        context.arc(d.x, d.y, 3, 0, 2 * Math.PI);
-    }
 }
 
 generate("01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ .$%-/", "#root");
