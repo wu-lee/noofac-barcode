@@ -1,6 +1,18 @@
 var d3 = require('d3');
 
 function generate(barcode, selector){
+    var config = {
+        circle: {
+            radius: 6,
+            color: '#333',
+            charge: -30,
+        },
+        link: {
+            color: '#bbb',
+            length: 50,
+            strength: 1,
+        },
+    };
     var n = 10;
     var data= {
         nodes: d3.range(n).map(function(i) {
@@ -17,10 +29,10 @@ function generate(barcode, selector){
     
     var simulation = d3.forceSimulation(data.nodes)
         .force("charge", d3.forceManyBody()
-               .strength(-30))
+               .strength(config.circle.charge))
         .force("link", d3.forceLink(data.links)
-               .strength(1)
-               .distance(20)
+               .strength(config.link.strength)
+               .distance(config.link.length)
                .iterations(10))
         .on("tick", ticked);
 
@@ -55,31 +67,30 @@ function generate(barcode, selector){
         .data(data.nodes)
         .enter()
         .append("circle")
-        .attr("r", 3)
+        .attr("r", config.circle.radius)
+        .attr("fill", config.circle.color)
         .call(d3.drag()
               .on("start", dragstarted)
               .on("drag", dragged)
               .on("end", dragended));
     
-    
-/*    
-    d3.select(svg)
-        .call(d3.drag()
-              .subject(dragsubject)
-              .on("start", dragstarted)
-              .on("drag", dragged)
-              .on("end", dragended));
-  */  
-    function ticked() {
-        links
-            .attr("x1", function(d) { return d.source.x; })
-            .attr("y1", function(d) { return d.source.y; })
-            .attr("x2", function(d) { return d.target.x; })
-            .attr("y2", function(d) { return d.target.y; });
-        
+    var lineFunction = d3.line()
+        .curve(d3.curveCatmullRom)
+        .x(function(d) { return d.x; })
+        .y(function(d) { return d.y; })
+
+    var lineGraph = chart.append("path")
+        .attr("stroke", "blue")
+        .attr("stroke-width", 1)
+        .attr("fill", "none");
+
+    function ticked() {        
         nodes
             .attr("cx", function(d) { return d.x; })
-            .attr("cy", function(d) { return d.y; });        
+            .attr("cy", function(d) { return d.y; });
+
+        lineGraph
+            .attr("d", lineFunction(data.nodes))
     }
 
     function dragstarted(d) {
