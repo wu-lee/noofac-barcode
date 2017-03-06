@@ -12,8 +12,6 @@ module.exports = {
                     'node_modules/d3/**/d3.js',
                     'src/common.js',
                 ],
-            },
-            joinTo: {
                 'x/chain.js': [
                     'node_modules/d3/**/d3.js',
                     'src/chain.js',
