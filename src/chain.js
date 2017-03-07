@@ -2,40 +2,38 @@ var d3 = require('d3');
 
 function generate(barcode, selector){
     var config = {
+        length: 10,
         circle: {
             radius: 6,
             color: '#333',
             charge: -30,
         },
         link: {
-            color: '#bbb',
+            color: '#444',
             length: 50,
+            width: 1,
             strength: 1,
         },
     };
-    var n = 10;
-    var data= {
-        nodes: d3.range(n).map(function(i) {
-            return {
-                index: i,
-            };
-        }),
-        links: [],
+    var data = {
+        nodes: [], // list of nodes
+        links: [], // list of links
+        chains: [], // list of lists of nodes
     };
-    
-    for (var ix = 1; ix < n; ++ix) {
-        data.links.push({source: ix-1, target: ix});
+    function addBar(data, config) {
+        var chain = [];
+        for(var i = 0; i < config.length; i++) {
+            var index = data.nodes.length;
+            var node = { index: index };
+            data.nodes.push(node);
+            chain.push(node);
+
+            if (i > 0)
+                data.links.push({source: index-1, target: index});
+        }
+        data.chains.push(chain);
     }
     
-    var simulation = d3.forceSimulation(data.nodes)
-        .force("charge", d3.forceManyBody()
-               .strength(config.circle.charge))
-        .force("link", d3.forceLink(data.links)
-               .strength(config.link.strength)
-               .distance(config.link.length)
-               .iterations(10))
-        .on("tick", ticked);
-
     d3.select("svg").remove(); //clean previous contents
     
     var root = d3.select(selector),
@@ -53,15 +51,17 @@ function generate(barcode, selector){
         .attr("height", height)
         .attr("transform", "translate("+[width/2,height/2]+")")
     
-    var links = chart.append("g")
-        .attr("class", "links")
-        .selectAll("line")
-        .data(data.links)
-        .enter()
-        .append("line")
-        .attr("stroke", "#aaa");
+    
+    var lineFunction = d3.line()
+        .curve(d3.curveCatmullRom)
+        .x(function(d) { return d.x; })
+        .y(function(d) { return d.y; })
 
-    var nodes = chart.append("g")
+    
+    addBar(data, config);
+    addBar(data, config);
+
+    var circles = chart.append("g")
         .attr("class", "nodes")
         .selectAll("circle")
         .data(data.nodes)
@@ -73,24 +73,37 @@ function generate(barcode, selector){
               .on("start", dragstarted)
               .on("drag", dragged)
               .on("end", dragended));
-    
-    var lineFunction = d3.line()
-        .curve(d3.curveCatmullRom)
-        .x(function(d) { return d.x; })
-        .y(function(d) { return d.y; })
 
-    var lineGraph = chart.append("path")
-        .attr("stroke", "blue")
-        .attr("stroke-width", 1)
+    var lineGraph = chart.append("g")
+        .attr("class", "chains")
+        .selectAll("path")
+        .data(data.chains)
+        .enter()
+        .append("g")
+        .append("path")
+        .attr("stroke", config.link.color)
+        .attr("stroke-width", config.link.width)
         .attr("fill", "none");
 
-    function ticked() {        
-        nodes
+    
+    var simulation = d3.forceSimulation(data.nodes)
+        .force("charge", d3.forceManyBody()
+               .strength(config.circle.charge))
+    
+    simulation.force("link", d3.forceLink(data.links)
+                     .strength(config.link.strength)
+                     .distance(config.link.length)
+                     .iterations(10));
+
+    simulation
+        .on("tick", ticked);
+
+    function ticked() {
+        circles
             .attr("cx", function(d) { return d.x; })
             .attr("cy", function(d) { return d.y; });
 
-        lineGraph
-            .attr("d", lineFunction(data.nodes))
+        lineGraph.attr("d", function(d) { return lineFunction(d); });
     }
 
     function dragstarted(d) {
