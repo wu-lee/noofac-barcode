@@ -6,7 +6,7 @@ function generate(barcode, selector){
         circle: {
             radius: 6,
             color: '#333',
-            charge: -30,
+            charge: -3,
         },
         link: {
             color: '#444',
@@ -31,6 +31,10 @@ function generate(barcode, selector){
             if (i > 0)
                 data.links.push({source: index-1, target: index});
         }
+        chain[0].fx = chain[1].fx = data.chains.length*10;
+        chain[0].fy = 0;
+        chain[1].fy = 10;
+        
         data.chains.push(chain);
     }
     
@@ -58,6 +62,10 @@ function generate(barcode, selector){
         .y(function(d) { return d.y; })
 
     
+    addBar(data, config);
+    addBar(data, config);
+    addBar(data, config);
+    addBar(data, config);
     addBar(data, config);
     addBar(data, config);
 
