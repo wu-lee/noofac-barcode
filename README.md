@@ -1,6 +1,6 @@
 # Quickstart
 
-    git clone git@github.com:wu-lee/noofac-barcode.git
+    git clone https://github.com/wu-lee/noofac-barcode.git
     cd noofac-barcode
     npm install
     ./node_modules/.bin/brunch watch --server
