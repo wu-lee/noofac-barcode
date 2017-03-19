@@ -6,19 +6,19 @@ function generate(barcode, selector){
         fixedLength: 5,
         circle: {
             radius: 6,
-            color: '#333',
+            color: '#999',
             charge: -9,
         },
         link: {
             color: '#444',
-            length: 10,
+            length: 20,
             width: 1,
             strength: 1,
             rigidity: 1,
         },
         spacing: {
             x: 15,
-            y: 10,
+            y: 20,
             top: -130,
             left: -50,
         },
@@ -26,13 +26,19 @@ function generate(barcode, selector){
             strength: 0.1,
         },
     };
+    var bars = [
+        { width: 1, width2: 2},
+        { width: 3, width2: 1},
+        { width: 2, width2: 3},
+        { width: 1, width2: 1},        
+    ];
     var data = {
         nodes: [], // list of nodes
         links: [], // list of links
         chains: [], // list of lists of nodes
         chainlinks: [] // list of lists of links
     };
-    function addBar(data, config) {
+    function addBar(data, config, x, y, width) {
         var chain = [];
         var chainlink = [];
         for(var i = 0; i < config.length; i++) {
@@ -48,17 +54,18 @@ function generate(barcode, selector){
             }
         }
         for(i = 0; i < config.length; i++) {
-            var x = config.spacing.top + data.chains.length*config.spacing.x;
-            var y = config.spacing.left + config.spacing.y*i;
+            var yn = y + config.spacing.y*i;
+            console.log(x, yn);
             if (i < config.fixedLength) {
-                chain[i].fx = x
-                chain[i].fy = y;
+                chain[i].fx = x;
+                chain[i].fy = yn;
             }
             else {
                 chain[i].x = x
-                chain[i].y = y;
+                chain[i].y = yn;
             }
         }
+        chain.width = width;
         data.chains.push(chain);
         data.chainlinks.push(chainlink);
     }
@@ -85,15 +92,24 @@ function generate(barcode, selector){
         .x(function(d) { return d.x; })
         .y(function(d) { return d.y; })
 
+
+    var x = 0;
+    bars.forEach(function(bar) {
+        addBar(data, config, x, 0, bar.width*10);
+        x += bar.width*10+bar.width2*10;
+    });
+
+    var lineGraph = chart.append("g")
+        .attr("class", "chains")
+        .selectAll("path")
+        .data(data.chains)
+        .enter()
+        .append("g")
+        .append("path")
+        .attr("stroke", config.link.color)
+        .attr("stroke-width", function(d) { return d.width; })
+        .attr("fill", "none");
     
-    addBar(data, config);
-    addBar(data, config);
-    addBar(data, config);
-    addBar(data, config);
-    addBar(data, config);
-    addBar(data, config);
-
-
     var circles = chart.append("g")
         .attr("class", "nodes")
         .selectAll("circle")
@@ -107,17 +123,6 @@ function generate(barcode, selector){
               .on("drag", dragged)
               .on("end", dragended));
 
-    var lineGraph = chart.append("g")
-        .attr("class", "chains")
-        .selectAll("path")
-        .data(data.chains)
-        .enter()
-        .append("g")
-        .append("path")
-        .attr("stroke", config.link.color)
-        .attr("stroke-width", config.link.width)
-        .attr("fill", "none");
-    
     var simulation = d3.forceSimulation(data.nodes)
         .alphaDecay(0)
 //        .force("charge", d3.forceManyBody()
