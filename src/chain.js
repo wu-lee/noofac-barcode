@@ -201,7 +201,7 @@ function generate(barcode, selector){
               .on("end", dragended));
 
     var simulation = d3.forceSimulation(data.nodes)
-        .alphaDecay(0)
+//        .alphaDecay(0)
 //        .force("charge", d3.forceManyBody()
 //               .strength(config.circle.charge))
     
@@ -311,7 +311,7 @@ function generate(barcode, selector){
         function nqCrossProd(a, b) {
             return a.x*b.y - a.y*b.x;
         }
-        function addMoments(link0, link1) {
+        function addMoments(link0, link1, alpha) {
             if (link0.target !== link1.source)
                 throw new Error("unjoined links "+link0.target+" != "+link1.source);
 
@@ -338,11 +338,11 @@ function generate(barcode, selector){
             n2.vy += l1force.y;
         }
 
-        function force() {
+        function force(alpha) {
             links.map(addVector);
 //            return;
             for(var ix = 1; ix < links.length; ix+=1) {
-                addMoments(links[ix-1],links[ix]);
+                addMoments(links[ix-1], links[ix], alpha);
             }
         }
         force.initialize = function(n) {
