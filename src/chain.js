@@ -87,7 +87,7 @@ function generate(barcode, selector){
             charge: -9,
         },
         link: {
-            color: '#444',
+            color: '#eee',
             length: 20,
             width: 1,
             strength: 1,
@@ -171,22 +171,36 @@ function generate(barcode, selector){
     for(var ix = 0; ix < bars.length; ix += 2) {
         var w1 = bars[ix]*config.spacing.x,
             w2 = bars[ix+1]*config.spacing.x;
-        
-        addBar(data, config, x+w1/2, config.spacing.top, w1);
-        x += w1+w2;
+
+        x += w1;        
+        addBar(data, config, x+w2/2, config.spacing.top, w2);
+        x += w2;
     }
 
-    var lineGraph = chart.append("g")
-        .attr("class", "chains")
+    
+    var lineGraph1 = chart.append("g")
+        .attr("class", "chains1")
         .selectAll("path")
         .data(data.chains)
         .enter()
         .append("g")
         .append("path")
-        .attr("stroke", config.link.color)
+        .attr("stroke", '#000')
+        .attr("stroke-width", function(d) { return d.width+config.spacing.x; })
+        .attr("fill", "none")
+    
+    var lineGraph2 = chart.append("g")
+        .attr("class", "chains2")
+        .selectAll("path")
+        .data(data.chains)
+        .enter()
+        .append("g")
+        .append("path")
+        .attr("stroke", '#fff')
         .attr("stroke-width", function(d) { return d.width; })
         .attr("fill", "none");
-    
+
+    /*
     var circles = chart.append("g")
         .attr("class", "nodes")
         .selectAll("circle")
@@ -199,9 +213,9 @@ function generate(barcode, selector){
               .on("start", dragstarted)
               .on("drag", dragged)
               .on("end", dragended));
-
+*/
     var simulation = d3.forceSimulation(data.nodes)
-//        .alphaDecay(0)
+        .alphaDecay(0)
 //        .force("charge", d3.forceManyBody()
 //               .strength(config.circle.charge))
     
@@ -219,7 +233,7 @@ function generate(barcode, selector){
 
     simulation
         .on("tick", ticked);
-                 console.log(">>>");
+
     function forceLink(links) {
         var nodes = [],
             distance = 1,
@@ -357,12 +371,13 @@ function generate(barcode, selector){
     };
     
     function ticked() {
-        
+/*        
         circles
             .attr("cx", function(d) { return d.x; })
             .attr("cy", function(d) { return d.y; });
-
-        lineGraph.attr("d", function(d) { return lineFunction(d); });
+*/
+        lineGraph1.attr("d", function(d) { return lineFunction(d); });
+        lineGraph2.attr("d", function(d) { return lineFunction(d); });
     }
 
     function dragstarted(d) {
