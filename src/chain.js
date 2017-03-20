@@ -1,5 +1,82 @@
 var d3 = require('d3');
 
+var characters = {  // map each character to its bitcode
+    " ": "100110101101",
+    "$": "100100100101",
+    "%": "101001001001",
+    "*": "100101101101",
+    "+": "100101001001",
+    "-": "100101011011",
+    "/": "100100101001",
+    ".": "110010101101",
+    '0': '101001101101',
+    "1": "110100101011",
+    "2": "101100101011",
+    "3": "110110010101",
+    "4": "101001101011",
+    "5": "110100110101",
+    "6": "101100110101",
+    "7": "101001011011",
+    "8": "110100101101",
+    "9": "101100101101",
+    "A": "110101001011",
+    "B": "101101001011",
+    "C": "110110100101",
+    "D": "101011001011",
+    "E": "110101100101",
+    "F": "101101100101",
+    "G": "101010011011",
+    "H": "110101001101",
+    "I": "101101001101",
+    "J": "101011001101",
+    "K": "110101010011",
+    "L": "101101010011",
+    "M": "110110101001",
+    "N": "101011010011",
+    "O": "110101101001",
+    "P": "101101101001",
+    "Q": "101010110011",
+    "R": "110101011001",
+    "S": "101101011001",
+    "T": "101011011001",
+    "U": "110010101011",
+    "V": "100110101011",
+    "W": "110011010101",
+    "X": "100101101011",
+    "Y": "110010110101",
+    "Z": "100110110101"
+};
+
+function stringToCode39Barcode(barcode){
+    function charToCode(ch) {
+        return characters[ch];
+    }
+    
+    var data = Array.prototype.map.call(barcode, charToCode)
+    // Code 39 barcodes start and end with a *
+    data.unshift(characters['*']); 
+    data.push(characters['*']);
+
+    return data.join('0');
+}
+
+function barcodeToWidths(barcode) {
+    var widths = [];
+    var last;
+    var count = 1;
+    for(var ix = 1; ix < barcode.length; ix++) {
+        if (barcode[ix] === barcode[ix-1]) {
+            count += 1;
+        }
+        else {
+            widths.push(count);
+            count = 1;
+        }
+    }
+    
+    return widths;
+}
+
 function generate(barcode, selector){
     var config = {
         length: 30,
@@ -17,21 +94,18 @@ function generate(barcode, selector){
             rigidity: 1,
         },
         spacing: {
-            x: 15,
+            x: 10,
             y: 20,
-            top: -130,
-            left: -50,
+            top: -300,
+            left: -900,
         },
         gravity: {
             strength: 0.1,
         },
     };
-    var bars = [
-        { width: 1, width2: 2},
-        { width: 3, width2: 1},
-        { width: 2, width2: 3},
-        { width: 1, width2: 1},        
-    ];
+    var bc = stringToCode39Barcode(barcode);
+    var bars = barcodeToWidths(bc);
+    console.log(barcode, bc, bars);
     var data = {
         nodes: [], // list of nodes
         links: [], // list of links
@@ -93,11 +167,14 @@ function generate(barcode, selector){
         .y(function(d) { return d.y; })
 
 
-    var x = 0;
-    bars.forEach(function(bar) {
-        addBar(data, config, x, 0, bar.width*10);
-        x += bar.width*10+bar.width2*10;
-    });
+    var x = config.spacing.left;
+    for(var ix = 0; ix < bars.length; ix += 2) {
+        var w1 = bars[ix]*config.spacing.x,
+            w2 = bars[ix+1]*config.spacing.x;
+        
+        addBar(data, config, x+w1/2, config.spacing.top, w1);
+        x += w1+w2;
+    }
 
     var lineGraph = chart.append("g")
         .attr("class", "chains")
@@ -132,7 +209,7 @@ function generate(barcode, selector){
                .strength(config.link.strength)
                .distance(config.link.length))
 
-//        .force("gravity", forceGravity(data.nodes));
+        .force("gravity", forceGravity(data.nodes));
 
     data.chainlinks.map(function(chainlink, ix) {
         simulation
@@ -188,7 +265,7 @@ function generate(barcode, selector){
         function force(a) {
 //            console.log("gravity", a);
             nodes.forEach(function(o, i) {
-                o.vy += 3; 
+                o.vy += 0.5; 
             });
         }
         return force;
@@ -246,7 +323,7 @@ function generate(barcode, selector){
                 n2 = nodes[link1.target],
                 l0perp = clock90Vec(link0.unit),
                 l1perp = clock90Vec(link1.unit),
-                dirn = Math.sign(nqCrossProd(link0.unit, link1.unit)),
+                dirn = ((link0.source % 3) * ((link0.source+5) % 7) % 3)*2-1, //Math.sign(nqCrossProd(link0.unit, link1.unit)),
                 moment = strength*lenVec(midvec)*dirn,
                 l0force = mulVec(l0perp, moment),
                 l1force = mulVec(l1perp, moment);
@@ -307,6 +384,6 @@ function generate(barcode, selector){
     
 }
 
-generate("01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ .$%-/", "#root");
+generate("NOODLEFACTORY", "#root");
     d3.select('#text').text("hello");
 
