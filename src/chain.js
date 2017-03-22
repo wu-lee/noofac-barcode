@@ -1,5 +1,29 @@
 var d3 = require('d3');
 
+function subVec(v1, v2) {
+    return {x:v1.x-v2.x, y:v1.y-v2.y};
+}
+function len2Vec(v) {
+    return v.x*v.x + v.y*v.y;
+}
+function lenVec(v) {
+    return Math.sqrt(v.x*v.x + v.y*v.y);
+}
+function divVec(v, d) {
+    return {x:v.x/d, y:v.y/d};
+}
+function mulVec(v, m) {
+    return {x:v.x*m, y:v.y*m};
+}
+// Rotates a vector a clockwise rightangle (in r-h coord system)
+function clock90Vec(v) {
+    return {x:v.y, y:-v.x};
+}
+// Not quite the cross product, but gets the perp. component
+function nqCrossProd(a, b) {
+    return a.x*b.y - a.y*b.x;
+}
+
 var characters = {  // map each character to its bitcode
     " ": "100110101101",
     "$": "100100100101",
@@ -79,20 +103,21 @@ function barcodeToWidths(barcode) {
 
 function generate(barcode, selector){
     var config = {
-        length: 30,
-        fixedLength: 5,
+        length: 20,
+        fixedLength: 2,
         circle: {
-            radius: 6,
-            color: '#999',
+            radius: 20,
+            color: 'none',
             charge: -9,
         },
         link: {
             color: '#eee',
-            length: 20,
+            length: 30,
             width: 1,
             strength: 1,
-            rigidity: 1,
+            rigidity: 0.3,
         },
+
         spacing: {
             x: 10,
             y: 20,
@@ -105,7 +130,8 @@ function generate(barcode, selector){
     };
     var bc = stringToCode39Barcode(barcode);
     var bars = barcodeToWidths(bc);
-    console.log(barcode, bc, bars);
+    console.log("the barcode encodes: '"+barcode+"'");
+    
     var data = {
         nodes: [], // list of nodes
         links: [], // list of links
@@ -138,6 +164,13 @@ function generate(barcode, selector){
                 node.x = x
                 node.y = yn;
             }
+
+            // Perturb the position of the last point,
+            // which triggers wriggling.
+            if (i === config.length-1) {
+                var r = Math.random()*2-1;
+                node.x += r;
+            }
         }
         chain.width = width;
         data.chains.push(chain);
@@ -154,7 +187,9 @@ function generate(barcode, selector){
         svg = root.append("svg")
         .attr("width", width)
         .attr("height", height),
+
         scale = 3,
+
         chart = svg.append("g")
         .classed("chart", true)
         .attr("width", width)
@@ -209,7 +244,7 @@ function generate(barcode, selector){
         .attr("stroke-width", function(d) { return d.width; })
         .attr("fill", "none");
 
-    /*
+    
     var circles = chart.append("g")
         .attr("class", "nodes")
         .selectAll("circle")
@@ -218,11 +253,12 @@ function generate(barcode, selector){
         .append("circle")
         .attr("r", config.circle.radius)
         .attr("fill", config.circle.color)
+        .attr("pointer-events", "visible")
         .call(d3.drag()
               .on("start", dragstarted)
               .on("drag", dragged)
               .on("end", dragended));
-*/
+
     var simulation = d3.forceSimulation(data.nodes)
         .alphaDecay(0)
 //        .force("charge", d3.forceManyBody()
@@ -286,7 +322,6 @@ function generate(barcode, selector){
     
     function forceGravity(nodes) {
         function force(a) {
-//            console.log("gravity", a);
             nodes.forEach(function(o, i) {
                 o.vy += 0.5; 
             });
@@ -311,29 +346,6 @@ function generate(barcode, selector){
             link.unit = divVec(v, d);
         }
 
-        function subVec(v1, v2) {
-            return {x:v1.x-v2.x, y:v1.y-v2.y};
-        }
-        function len2Vec(v) {
-            return v.x*v.x + v.y*v.y;
-        }
-        function lenVec(v) {
-            return Math.sqrt(v.x*v.x + v.y*v.y);
-        }
-        function divVec(v, d) {
-            return {x:v.x/d, y:v.y/d};
-        }
-        function mulVec(v, m) {
-            return {x:v.x*m, y:v.y*m};
-        }
-        // Rotates a vector a clockwise rightangle (in r-h coord system)
-        function clock90Vec(v) {
-            return {x:v.y, y:-v.x};
-        }
-        // Not quite the cross product, but gets the perp. component
-        function nqCrossProd(a, b) {
-            return a.x*b.y - a.y*b.x;
-        }
         function addMoments(link0, link1, alpha) {
             if (link0.target !== link1.source)
                 throw new Error("unjoined links "+link0.target+" != "+link1.source);
@@ -346,11 +358,14 @@ function generate(barcode, selector){
                 n2 = nodes[link1.target],
                 l0perp = clock90Vec(link0.unit),
                 l1perp = clock90Vec(link1.unit),
-                dirn = ((link0.source % 3) * ((link0.source+5) % 7) % 3)*2-1, //Math.sign(nqCrossProd(link0.unit, link1.unit)),
+                // poor man's determinstic randomising hash function.
+                dirn = ((link0.source % 13) * ((link0.source+5) % 7) % 3)*2-1,
+                // Straightforward rigidity:
+                // dirn = Math.sign(nqCrossProd(link0.unit, link1.unit)),
                 moment = strength*lenVec(midvec)*dirn,
                 l0force = mulVec(l0perp, moment),
                 l1force = mulVec(l1perp, moment);
-            //console.log(l0force.x, l0force.y, l1force.x, l1force.y);
+
             n0.vx += l0force.x;
             n0.vy += l0force.y;
             n1.vx -= l0force.x;
@@ -363,7 +378,7 @@ function generate(barcode, selector){
 
         function force(alpha) {
             links.map(addVector);
-//            return;
+
             for(var ix = 1; ix < links.length; ix+=1) {
                 addMoments(links[ix-1], links[ix], alpha);
             }
@@ -380,13 +395,16 @@ function generate(barcode, selector){
     };
     
     function ticked() {
-/*        
+        
         circles
             .attr("cx", function(d) { return d.x; })
             .attr("cy", function(d) { return d.y; });
-*/
+
         lineGraph1.attr("d", function(d) { return lineFunction(d); });
         lineGraph2.attr("d", function(d) { return lineFunction(d); });
+//        mouse
+//            .attr("cx", function(d) { return ptrPos.x })
+//            .attr("cy", function(d) { return ptrPos.y });
     }
 
     function dragstarted(d) {
