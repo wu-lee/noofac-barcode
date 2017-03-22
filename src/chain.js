@@ -167,12 +167,21 @@ function generate(barcode, selector){
         .y(function(d) { return d.y; })
 
 
+    // The intent here is to draw white bars with black borders.  The
+    // borders form the black bars. The borders may overlap, however,
+    // as necessary to create the appropriate width (which for
+    // barcode39 should be at most 2 units for black or white).  We
+    // can assume that the bars start an end with a narrow black
+    // (because the fixed start and end character does), and alternate
+    // black and white. Our noodles can therefore have the width of
+    // the white bars, with uniformly 1 unit border.
     var x = config.spacing.left;
-    for(var ix = 0; ix < bars.length; ix += 2) {
-        var w1 = bars[ix]*config.spacing.x,
-            w2 = bars[ix+1]*config.spacing.x;
+    var ix = 0;
+    while(ix < bars.length-1) {
+        var w1 = bars[ix++]*config.spacing.x,
+            w2 = bars[ix++]*config.spacing.x;
 
-        x += w1;        
+        x += w1;
         addBar(data, config, x+w2/2, config.spacing.top, w2);
         x += w2;
     }
@@ -186,7 +195,7 @@ function generate(barcode, selector){
         .append("g")
         .append("path")
         .attr("stroke", '#000')
-        .attr("stroke-width", function(d) { return d.width+config.spacing.x; })
+        .attr("stroke-width", function(d) { return d.width+config.spacing.x*2; })
         .attr("fill", "none")
     
     var lineGraph2 = chart.append("g")
