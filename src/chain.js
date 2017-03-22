@@ -129,14 +129,14 @@ function generate(barcode, selector){
         }
         for(i = 0; i < config.length; i++) {
             var yn = y + config.spacing.y*i;
-            console.log(x, yn);
+            node = chain[i];
             if (i < config.fixedLength) {
-                chain[i].fx = x;
-                chain[i].fy = yn;
+                node.fx = node.x = x;
+                node.fy = node.y = yn;
             }
             else {
-                chain[i].x = x
-                chain[i].y = yn;
+                node.x = x
+                node.y = yn;
             }
         }
         chain.width = width;
