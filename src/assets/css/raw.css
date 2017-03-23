@@ -1,0 +1,84 @@
+html, body {
+    background: white;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    color: #555555;
+    font-family: Verdana, Arial, Helvetica, sans-serif; 
+    font-size:12px;
+    z-index: -100;
+}
+body {
+}
+#index-content {
+    pointer-events:  none;
+    position: relative;
+    width: 640px;
+    height: 520px;
+
+    /* centre vertically and horizontally */
+    top: 50%;
+    left: 50%;
+    transform: perspective(1px) translateX(-50%) translateY(-50%);
+    -webkit-transform: perspective(1px) translateX(-50%) translateY(-50%);
+    -ms-transform: perspective(1px) translateX(-50%) translateY(-50%);
+}
+#index-content .logo,
+#index-content .text,
+#index-content .leftlink,
+#index-content .rightlink {
+    display: block;
+    position: absolute;
+    pointer-events: auto;
+}
+#index-content .logo {
+    left: 45px;
+    right: 45px;
+    top: 100px;
+    height: 90px;
+    z-index: 1;
+}
+.noodles {
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    top: 170px;
+    position: absolute;
+    overflow: visible;
+}
+.noodles, .noodles svg, g {
+    overflow: visible;
+}
+#index-content .text {
+    top: 100px;
+    left: 128px;
+    z-index: 1;
+}
+#index-content .leftlink,
+#index-content .rightlink {
+    top: 420px;
+    height: 27px;
+}
+#index-content .leftlink > a,
+#index-content .rightlink > a {
+    display: block;
+    height: 27px;
+}
+#index-content .leftlink {
+    right: 470px;
+}
+#index-content .rightlink {
+    left: 470px;
+}
+a:link {
+    color: #222200;
+    text-decoration: none;
+}
+a:visited {
+    color: #222200;
+    text-decoration: none;
+}
+a:hover {
+    color: #222200;
+    text-decoration: underline;
+}

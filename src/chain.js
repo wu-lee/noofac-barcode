@@ -121,16 +121,16 @@ function generate(barcode, selector){
         spacing: {
             x: 10,
             y: 20,
-            top: -300,
-            left: -900,
+            top: 0,
+            left: -(barcode.length+2)*13*10/2,
         },
+        scale: 1/3,
         gravity: {
             strength: 0.1,
         },
     };
     var bc = stringToCode39Barcode(barcode);
     var bars = barcodeToWidths(bc);
-    console.log("the barcode encodes: '"+barcode+"'");
     
     var data = {
         nodes: [], // list of nodes
@@ -186,15 +186,13 @@ function generate(barcode, selector){
         
         svg = root.append("svg")
         .attr("width", width)
-        .attr("height", height),
-
-        scale = 3,
+        .attr("height", height)
 
         chart = svg.append("g")
         .classed("chart", true)
         .attr("width", width)
         .attr("height", height)
-        .attr("transform", "scale("+1/scale+"),translate("+[scale*width/2,scale*height/4]+")")
+        .attr("transform", "translate("+[width/2,0]+"),scale("+config.scale+")")
     
     var lineFunction = d3.line()
         .curve(d3.curveCardinal)
@@ -426,6 +424,6 @@ function generate(barcode, selector){
     
 }
 
-generate("NOODLEFACTORY", "#root");
-    d3.select('#text').text("hello");
-
+module.exports = {
+    generate: generate,
+};
