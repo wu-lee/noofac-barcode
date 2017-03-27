@@ -103,6 +103,7 @@ function barcodeToWidths(barcode) {
 
 function generate(barcode, selector){
     var config = {
+        units: (barcode.length+2)*13*10,
         length: 20,
         fixedLength: 2,
         circle: {
@@ -124,7 +125,6 @@ function generate(barcode, selector){
             top: 0,
             left: 0,
         },
-        scale: 1/17,
         gravity: {
             strength: 0.1,
         },
@@ -177,8 +177,10 @@ function generate(barcode, selector){
         data.chainlinks.push(chainlink);
     }
 
-    d3.select("svg").remove(); //clean previous contents
-    
+    d3.select(selector).select(function() {
+        return this.childNodes;
+    }).remove(); //clean previous contents
+
     var root = d3.select(selector),
         width = 100,
         height = 100,
@@ -186,15 +188,12 @@ function generate(barcode, selector){
         svg = root.append("svg")
         .attr("width", "100%")
         .attr("height", "100%")
-        .attr("viewBox", [0, 0, (barcode.length+2)*13*10/2, 100].join(" "))
-        .attr("preserveAspectRatio", "xMinYMin slice")
+        .attr("viewBox", [0, 0, config.units, 100].join(" "))
+        .attr("preserveAspectRatio", "xMidYMin meet")
 
         chart = svg.append("g")
         .classed("chart", true)
-        .attr("width", width)
-        .attr("height", height)
-        .attr("transform", "scale("+config.scale+")")
-    
+
     var lineFunction = d3.line()
         .curve(d3.curveCardinal)
         .x(function(d) { return d.x; })
