@@ -122,9 +122,9 @@ function generate(barcode, selector){
             x: 10,
             y: 20,
             top: 0,
-            left: -(barcode.length+2)*13*10/2,
+            left: 0,
         },
-        scale: 1/3,
+        scale: 1/17,
         gravity: {
             strength: 0.1,
         },
@@ -180,19 +180,20 @@ function generate(barcode, selector){
     d3.select("svg").remove(); //clean previous contents
     
     var root = d3.select(selector),
-        bbox = root.node().getBoundingClientRect(),
-        width = bbox.width,
-        height = bbox.height,
+        width = 100,
+        height = 100,
         
         svg = root.append("svg")
-        .attr("width", width)
-        .attr("height", height)
+        .attr("width", "100%")
+        .attr("height", "100%")
+        .attr("viewBox", [0, 0, (barcode.length+2)*13*10/2, 100].join(" "))
+        .attr("preserveAspectRatio", "xMinYMin slice")
 
         chart = svg.append("g")
         .classed("chart", true)
         .attr("width", width)
         .attr("height", height)
-        .attr("transform", "translate("+[width/2,0]+"),scale("+config.scale+")")
+        .attr("transform", "scale("+config.scale+")")
     
     var lineFunction = d3.line()
         .curve(d3.curveCardinal)
